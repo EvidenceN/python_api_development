@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
+from random import randrange
 
 app = FastAPI()
 
@@ -17,27 +18,38 @@ async def root():
     return {"message": "Hello World"}
 
 
+my_posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1}, 
+            {"title": "favorite foods", "content": "I like pizza", "id": 2}]
+
+
 @app.get("/posts")
 def get_posts():
-    return {"data": "This is your posts"}
+    return {"data": my_posts}
 
-# Posts -V1 ; No Base Model
-# @app.post("/createposts")
-# def create_post(payload: dict = Body(...)):
-#     print(payload)
-#     result = {"Message": "successfully created a post"}
-#     #result  = {"new_post": f"Title {payload['title']}. Content: {payload['content']}"}
-#     return result
+@app.post("/posts")
+def create_post(new_post: Post): 
+    new_post_dict = new_post.model_dump()
+    print(new_post_dict)
+    new_post_dict['id'] = randrange(0, 100000) # manually adding new id to posts in th absence of dictionaries
+    print(new_post_dict)    
+    my_posts.append(new_post_dict)
+    print(my_posts)
+    return {"data": new_post_dict}
 
 
-@app.post("/createposts")
-def create_post(new_post: Post):
-    # print(new_post)
-    # print(new_post.title)
-    # print(new_post.publish)
-    #result  = {"new_post": f"Title {payload['title']}. Content: {payload['content']}"}
-    new_dictionary = new_post.model_dump()
-    print(new_dictionary)
-    result  = {"new_post": "New data for the post"}
-    result  = {"new_post": new_dictionary}    
-    return result
+@app.get("/posts/{id}")
+def get_post(id):
+    print(id)
+    return {"data": f"this is your post {id}"}
+
+# My Experiment
+@app.post("/posts/{id}")
+def send_post(id, new_post: Post):
+    print(id)
+    new_post_dict = new_post.model_dump()
+    print(new_post_dict)
+    new_post_dict['id'] = id # manually adding new id to posts in th absence of dictionaries
+    print(new_post_dict)    
+    my_posts.append(new_post_dict)
+    print(my_posts)    
+    return {"data": f'Your post has been sent'}
