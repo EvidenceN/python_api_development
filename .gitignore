@@ -1,2 +1,3 @@
 fast_api_venv/
 __pycache__/
+postgres_sql
