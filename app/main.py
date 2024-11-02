@@ -3,12 +3,30 @@ from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
+import psycopg2
+import os 
+from dotenv import load_dotenv
+from psycopg2.extras import RealDictCursor # Because it doesn't give you the column names, just the values of the columns. Hence why this is needed
+import time
+import sys
+
+load_dotenv()
+p_host = 'localhost'
+p_database = 'fastapi'
+p_user = 'postgres'
+p_password = os.getenv("postgres_password")
+p_port = 5433
+
+try:
+    conn = psycopg2.connect(host = p_host, dbname = p_database, user = p_user, password = p_password, port = p_port, cursor_factory=RealDictCursor)
+    cursor = conn.cursor
+    print("Database connection was successful")
+except Exception as error:
+    raise SystemExit(f"Connecting to database failed \nError: {error}")
 
 app = FastAPI()
 
 # Schema. Title str, content str,
-
-
 class Post(BaseModel):
     title: str
     content: str

@@ -1,3 +1,15 @@
+from fastapi import FastAPI, Response, status, HTTPException
+from fastapi.params import Body
+from pydantic import BaseModel
+from typing import Optional
+from random import randrange
+import psycopg2
+import os 
+from dotenv import load_dotenv
+from psycopg2.extras import RealDictCursor # Because it doesn't give you the column names, just the values of the columns. Hence why this is needed
+import time
+import sys
+
 ################################################################################
 # VERSION 1 - Experimentation
 ################################################################################
@@ -191,5 +203,53 @@ def update_post(id: int, post: Post):
 
 
 ################################################################################
-# VERSION 3 - .....
+# VERSION 3 - Connecting to Psygopg2 AND Exiting the program. 
 ################################################################################
+
+while True:
+    try:
+        conn = psycopg2.connect(host = p_host, dbname = p_database, user = p_user, password = p_password, port = p_port, cursor_factory=RealDictCursor)
+        cursor = conn.cursor
+        print("Database connection was successful")
+        break
+    except Exception as error:
+        # print("Connecting to database failed")
+        # print("Error: ", error)
+        time.sleep(2) # wait 2 seconds before retrying
+        raise SystemExit(f"Connecting to database failed \nError: {error}")
+        #sys.exit()
+
+## Version 2 that retries twice more before exiting
+
+retry_count = 0
+max_retries = 2
+
+
+while retry_count <= max_retries:
+    try:
+        conn = psycopg2.connect(host = p_host, dbname = p_database, user = p_user, password = p_password, port = p_port, cursor_factory=RealDictCursor)
+        cursor = conn.cursor
+        print("Database connection was successful")
+        break
+    except Exception as error:
+        print(f"Attempt {retry_count + 1} failed: {error}")
+        retry_count += 1
+        if retry_count > max_retries:
+            message = f"Connecting to database failed after {max_retries + 1} attempts\nError: {error}"
+            print(message)
+            sys.exit(1)        
+        time.sleep(2) # wait 2 seconds before retrying
+        # raise SystemExit(f"Connecting to database failed \nError: {error}")
+        #sys.exit()      
+
+#SIMPLIEST Connection String
+
+try:
+    conn = psycopg2.connect(host = p_host, dbname = p_database, user = p_user, password = p_password, port = p_port, cursor_factory=RealDictCursor)
+    cursor = conn.cursor
+    print("Database connection was successful")
+except Exception as error:
+    raise SystemExit(f"Connecting to database failed \nError: {error}")
+################################################################################
+# VERSION 4 - ,,,
+################################################################################        

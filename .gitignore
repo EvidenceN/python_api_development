@@ -1,3 +1,6 @@
 fast_api_venv/
 __pycache__/
 postgres_sql
+.env
+app/test.py
+main_Extra.py
