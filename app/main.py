@@ -19,7 +19,7 @@ p_port = 5433
 
 try:
     conn = psycopg2.connect(host = p_host, dbname = p_database, user = p_user, password = p_password, port = p_port, cursor_factory=RealDictCursor)
-    cursor = conn.cursor
+    cursor = conn.cursor()
     print("Database connection was successful")
 except Exception as error:
     raise SystemExit(f"Connecting to database failed \nError: {error}")
@@ -31,36 +31,50 @@ class Post(BaseModel):
     title: str
     content: str
     publish: bool = True
-    rating: Optional[int] = None
-    id: Optional[int] = randrange(0, 100000)
 
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
-
-my_posts = [{"title": "title of post 1", "content": "content of post 1", "id": 1},
-            {"title": "favorite foods", "content": "I like pizza", "id": 2}]
-
-
 @app.get("/posts")
 def get_posts():
-    return {"data": my_posts}
+    cursor.execute("""
+                          SELECT * FROM public."POSTS"
+                          """)
+    post = cursor.fetchall()
+    return post
+
+# Version 1
+# @app.post("/posts", status_code=status.HTTP_201_CREATED)
+# def create_post(new_post: Post):
+#     cursor.execute(""" INSERT INTO  public."POSTS" ("TITLE", "CONTENT", "published") VALUES (%s, %s, %s)""", ('py_post', 'Posting from python', 'false'))
+#     conn.commit()
+#     cursor.execute("""
+#                           SELECT * FROM public."POSTS"
+#                           """)
+#     post = cursor.fetchall()    
+#     return post
+
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_post(new_post: Post):
-    new_post_dict = new_post.model_dump()
-    print(new_post_dict)
-    # manually adding new id to posts in th absence of dictionaries
+    query = """ INSERT INTO public."POSTS" ("TITLE", "CONTENT") VALUES (%s, %s)"""
+    data = [
+        ("456", 'Posting from Java-5'),
+        ('py_post_25', 'Posting from JavaScript_90'),                        
+    ]
+    cursor.executemany(query, data)
+    conn.commit()
+    select_query = """
+                SELECT * FROM public."POSTS"
+                                """
+    cursor.execute(select_query)
 
-    # no longer needed since it has been added to the pydantic schema model. It's actually needed if not, it will give the same Id twice
-    new_post_dict['id'] = randrange(0, 100000)
-    print(new_post_dict)
-    my_posts.append(new_post_dict)
-    print(my_posts)
-    return {"data": new_post_dict}
+    post = cursor.fetchall()   
+    conn.close()     
+    return post
 
 
 # My Experiment
