@@ -251,5 +251,69 @@ try:
 except Exception as error:
     raise SystemExit(f"Connecting to database failed \nError: {error}")
 ################################################################################
-# VERSION 4 - ,,,
-################################################################################        
+# VERSION 4 - Psycopg2
+###############################################################################
+
+@app.get("/posts")
+def get_posts():
+    cursor.execute("""
+                          SELECT * FROM public."POSTS"
+                          """)
+    post = cursor.fetchall()
+    return post
+
+# Version 1
+# @app.post("/posts", status_code=status.HTTP_201_CREATED)
+# def create_post(new_post: Post):
+#     cursor.execute(""" INSERT INTO  public."POSTS" ("TITLE", "CONTENT", "published") VALUES (%s, %s, %s)""", ('py_post', 'Posting from python', 'false'))
+#     conn.commit()
+#     cursor.execute("""
+#                           SELECT * FROM public."POSTS"
+#                           """)
+#     post = cursor.fetchall()    
+#     return post
+
+
+# My Experiment - Multiple Posts
+# @app.post("/posts", status_code=status.HTTP_201_CREATED)
+# def create_post(new_post: Post):
+#     query = """ INSERT INTO public."POSTS" ("TITLE", "CONTENT") 
+#                 VALUES (%s, %s) """
+#     data = [
+#         ("458", 'Posting from Java-58'),
+#         ('py_post_258', 'Posting from JavaScript_908'),                        
+#     ]
+#     cursor.executemany(query, data) # Doesn't work with "RETURNING *"
+#     # conn.commit()
+#     select_query = """
+#                 SELECT * FROM public."POSTS"
+#                                 """
+#     cursor.execute(select_query)
+
+#     post = cursor.fetchall()   
+#     conn.close()     
+#     return post
+
+
+# Single Post
+@app.post("/posts", status_code=status.HTTP_201_CREATED)
+def create_post(new_post: Post):
+    cursor.execute (""" INSERT INTO public."POSTS" ("TITLE", "CONTENT", "published") VALUES (%s, %s, %s) RETURNING * """, (new_post.title, new_post.content, new_post.published))
+    # query =  (""" INSERT INTO public."POSTS" ("TITLE", "CONTENT", "published") VALUES (%s, %s, %s) RETURNING * """, (new_post.title, new_post.content, new_post.published))    
+    # data = [
+    #     (new_post.title, new_post.content, new_post.published),
+    #     # ('py_post_25', 'Posting from JavaScript_90'),                        
+    # ]
+    # cursor.executemany(query, data) -- Doesn't work either
+    # cursor.execute(query, data) -- Doesn't work either    
+    # cursor.execute(query) -- Doesn't Work
+    # conn.commit()
+    # select_query = """
+    #             SELECT * FROM public."POSTS"
+    #                             """
+    # cursor.execute(select_query)
+
+    post = cursor.fetchone()   
+    # conn.commit()    
+    # conn.close()     
+    return post        
